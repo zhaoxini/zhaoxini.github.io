@@ -146,8 +146,6 @@ records.forEach( record -> {
 
 
 
-
-
 ```
 
 
