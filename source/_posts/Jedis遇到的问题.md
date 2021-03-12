@@ -1,6 +1,8 @@
-```
-
-```
+---
+title: Jedis线程回收问题
+date: 2021-01-10 22:07:48
+tags: Jedis
+---
 
 > 问题：redis.clients.jedis.exceptions.JedisConnectionException:Could not get a resource from the pool
 
@@ -32,6 +34,8 @@ blocked_clients:0
 config get maxclients
 
 查询出来也没问题
+
+
 
 
 

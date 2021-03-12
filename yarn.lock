@@ -533,6 +533,14 @@
     "hexo-pagination" "1.0.0"
     "timsort" "^0.3.0"
 
+"hexo-generator-search@^2.4.1":
+  "integrity" "sha512-ojJT7huvda2F6rnv3pik4Yuk2Djj9iCDOucobynzbG8arQRqAyJf7wVDH3Hppr2vkpmigrLuPSXpuJCm2FbP2A=="
+  "resolved" "https://registry.npmjs.org/hexo-generator-search/-/hexo-generator-search-2.4.1.tgz"
+  "version" "2.4.1"
+  dependencies:
+    "nunjucks" "^3.0.1"
+    "utils-merge" "^1.0.0"
+
 "hexo-generator-tag@^1.0.0":
   "integrity" "sha1-VOwj3pQJx1WE6oHjYFelkDGwIvE="
   "resolved" "https://registry.npm.taobao.org/hexo-generator-tag/download/hexo-generator-tag-1.0.0.tgz"
@@ -898,7 +906,7 @@
   "resolved" "https://registry.npm.taobao.org/normalize-path/download/normalize-path-3.0.0.tgz"
   "version" "3.0.0"
 
-"nunjucks@^3.2.1":
+"nunjucks@^3.0.1", "nunjucks@^3.2.1":
   "integrity" "sha1-GzNhUkcpDpTigmO12FXs52VkijE="
   "resolved" "https://registry.npm.taobao.org/nunjucks/download/nunjucks-3.2.3.tgz"
   "version" "3.2.3"
@@ -1239,7 +1247,7 @@
   "resolved" "https://registry.npm.taobao.org/urix/download/urix-0.1.0.tgz"
   "version" "0.1.0"
 
-"utils-merge@1.0.1":
+"utils-merge@^1.0.0", "utils-merge@1.0.1":
   "integrity" "sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM="
   "resolved" "https://registry.npm.taobao.org/utils-merge/download/utils-merge-1.0.1.tgz"
   "version" "1.0.1"
