@@ -11,7 +11,7 @@
   
   <title>
     
-      Kafka消费者 
+      archive_a: 2020/11 
       
       
       |
@@ -87,155 +87,111 @@
 
 
       <div class="flex-container">
-        <!-- 文章详情页，展示文章具体内容，url形式：https://yoursite/文章标题/ -->
-<!-- 同时为「标签tag」，「朋友friend」，「分类categories」，「关于about」页面的承载页面，具体展示取决于page.type -->
+        <!-- 归档页，展示本站所有文章，按照年份降序归类，url形式：https://yoursite/archives/ -->
 
-<!-- LaTex Display -->
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-<script type="text/javascript" id="MathJax-script" async
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
-</script>
-<script>
-MathJax = {
-  tex: {
-    inlineMath: [['$', '$'], ['\\(', '\\)']]
-  }
-};
-</script>
+<!-- last: 按年份把文章分组，当前遍历到的年份 -->
+<!-- now: 当前遍历到的文章的发布年份 -->
 
-
-
-  
-
-  
-
-  
-
-  
-  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
-  <div class="container post-details" id="post-details">
-    <div class="post-content">
-      <div class="post-title">Kafka消费者</div>
-      <div class="post-attach">
-        <span class="post-pubtime">
-          <i class="iconfont icon-updatetime" title="Update time"></i>
-          2021-01-10 22:07:48
-        </span>
-        
-      </div>
-      <div class="markdown-body">
-        <h1 id="Kafka消费者"><a href="#Kafka消费者" class="headerlink" title="Kafka消费者"></a>Kafka消费者</h1><p>消费者从属于消费群组</p>
-<p>Kafka分为主题和分区，主题包括分区， 分区是个有序队列。</p>
-<p>消费者订阅主题，处理主题里分区的消息。如果想要有序处理，那么就讲消费者和分区进行绑定。</p>
-<h3 id="消费者、消费者群组和分区关系"><a href="#消费者、消费者群组和分区关系" class="headerlink" title="消费者、消费者群组和分区关系"></a>消费者、消费者群组和分区关系</h3><p>通常，一个主题会对应一个消费群组，消费群组的消费能力取决于消费者的个数。一个消费者对应一个分区或者多个分区。</p>
-<p>同一个分区内的消息只能被同一个消费者群组中的一个消费者消费</p>
-<p>但是可以被多个消费者群组消费。</p>
-<p>消费者 &gt; 分区，消费者过多，有消费者消费能力失效</p>
-<p>如果两个消费群组对应一个主题</p>
-<p>消费能力就是之前的两倍，但是每个消费者群组里面依然和上面相同</p>
-<p>当然，如果消费者能力很强，是可以处理多个分区的。</p>
-<p>消费者群组具有伸缩读取能力和处理能力，群组里的每个消费者只处理部分消息。</p>
-<p>如果分区的消息还没处理完，需要转移到另外一个消费者，这个过程就需要再均衡。</p>
-<h3 id="再均衡"><a href="#再均衡" class="headerlink" title="再均衡"></a>再均衡</h3><p>再均衡的过程就是消费者对分区失去所有权的过程，所以再失去所有权之前要把自己处理记录的偏移量记录下来。</p>
-<p>Kafka设计了一个再均衡监听器</p>
-<p><em><strong>ConsumerRebalanceListener.class</strong></em> </p>
-<p>实现接口的两个方法分别是***#onPartitionsRevoked*** 和 <em><strong>#onPartitonsAssigned</strong></em></p>
-<p>Revoked 是消费者停止读取消息之后被调用，在这里提交最后的偏移量</p>
-<p>Assigned 再均衡之后，消费者开始读取消息之前调用。</p>
-<p>这里涉及到偏移量提交的问题，偏移量是如何提交的</p>
-<p>再均衡会做一些清理工作</p>
-<ol>
-<li><p>关闭数据库连接</p>
-</li>
-<li><p>关闭文件具柄</p>
-</li>
-<li><p>缓冲区遗留的记录</p>
-</li>
-<li><p>…</p>
-</li>
-</ol>
-<h3 id="偏移量的提交"><a href="#偏移量的提交" class="headerlink" title="偏移量的提交"></a>偏移量的提交</h3><h4 id="同步提交"><a href="#同步提交" class="headerlink" title="同步提交"></a>同步提交</h4><p>分为手动提交和自动提交</p>
-<p>自动提交</p>
-<p>每5s,消费者会自动提交</p>
-<p>手动提交就不基于时间间隔，使用commitSync()提交偏移量。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">     consumer.commitSycn();</span><br><span class="line">   &#125;<span class="keyword">catch</span>(CommitFailedException e) &#123;</span><br><span class="line">     log.error(<span class="string">&quot;commit failed&quot;</span>, e);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>缺点：会限制吞吐量， 降低频率又回带来消息重复的问题</p>
-<h4 id="异步提交"><a href="#异步提交" class="headerlink" title="异步提交"></a>异步提交</h4><p>commitAsync();</p>
-<p>提交后就反回，虽然解决了上述的问题，但是也带来了新的问题，顺序问题。</p>
-<p>如果重试会带来顺序错误问题，就会带来消息重复消费的问题。</p>
-<p>可以通过回调的方式处理</p>
-<p>在重试前，先检查回调的序列好和即将提交的偏移量是否相等。相等可以提交，如果序列号偏大，需要停止重试。</p>
-<h4 id="同步和异步组合提交"><a href="#同步和异步组合提交" class="headerlink" title="同步和异步组合提交"></a>同步和异步组合提交</h4><p>提交偏移量的重点在于提交最后一个偏移量</p>
-<p>组合提交，异步正常提交，同步进行重试</p>
-<h4 id="提交特定偏移量"><a href="#提交特定偏移量" class="headerlink" title="提交特定偏移量"></a>提交特定偏移量</h4><p>通过map记录偏移量相关信息。</p>
-<p>然后再通过commitAsync或者commitSync尽心提交</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">ConsumerRecords.class <span class="comment">//消费者记录</span></span><br><span class="line">  </span><br><span class="line">ConsumerRecord records = consumer.poll(<span class="number">100</span>); <span class="comment">//拉取100s内的数据返回消费者端</span></span><br><span class="line"></span><br><span class="line">records.forEach( record -&gt; &#123;</span><br><span class="line">  record.offset(); <span class="comment">// 偏移量</span></span><br><span class="line">  cosummer.commitAsync(...);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-
-      </div>
-      
-        <div class="prev-or-next">
-          <div class="post-foot-next">
-            
-              <a href="/2020/07/10/mysql%E4%B8%8B%E7%9A%84join%20buffer/" target="_self">
-                <i class="iconfont icon-chevronleft"></i>
-                <span>Prev</span>
-              </a>
-            
-          </div>
-          <div class="post-attach">
-            <span class="post-pubtime">
-              <i class="iconfont icon-updatetime" title="Update time"></i>
-              2021-01-10 22:07:48
-            </span>
-            
-          </div>
-          <div class="post-foot-prev">
-            
-              <a href="/2021/08/10/socket-io%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%90%86%E8%A7%A3%E5%92%8C%E7%BB%84%E4%BB%B6%E5%88%86%E6%9E%90/" target="_self">
-                <span>Next</span>
-                <i class="iconfont icon-chevronright"></i>
-              </a>
-            
-          </div>
+<div class="container archives">
+  <div class="post-list">
+    
+        <!-- 后续文章的发布年份呈现 -->
+        <div class="content-title">
+          <h2>
+            <span>2021</span>
+          </h2>
         </div>
       
-    </div>
+      <div class="post-item" title="WebSocket服务端实现">
+        <div class="time-m-d">08-10</div>
+        <div class="title">
+          <a href="/2021/08/10/WebSocket%E7%9A%84%E4%BD%BF%E7%94%A8/">
+            <span>WebSocket服务端实现</span>
+          </a>
+        </div>
+      </div>
     
-  <div class="post-catalog" id="catalog">
-    <div class="title">Contents</div>
-    <div class="catalog-content">
-      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Kafka%E6%B6%88%E8%B4%B9%E8%80%85"><span class="toc-text">Kafka消费者</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E3%80%81%E6%B6%88%E8%B4%B9%E8%80%85%E7%BE%A4%E7%BB%84%E5%92%8C%E5%88%86%E5%8C%BA%E5%85%B3%E7%B3%BB"><span class="toc-text">消费者、消费者群组和分区关系</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%8D%E5%9D%87%E8%A1%A1"><span class="toc-text">再均衡</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%81%8F%E7%A7%BB%E9%87%8F%E7%9A%84%E6%8F%90%E4%BA%A4"><span class="toc-text">偏移量的提交</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E6%8F%90%E4%BA%A4"><span class="toc-text">同步提交</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BC%82%E6%AD%A5%E6%8F%90%E4%BA%A4"><span class="toc-text">异步提交</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E5%92%8C%E5%BC%82%E6%AD%A5%E7%BB%84%E5%90%88%E6%8F%90%E4%BA%A4"><span class="toc-text">同步和异步组合提交</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8F%90%E4%BA%A4%E7%89%B9%E5%AE%9A%E5%81%8F%E7%A7%BB%E9%87%8F"><span class="toc-text">提交特定偏移量</span></a></li></ol></li></ol></li></ol></li></ol>
-    </div>
-  </div>
-
-  
-<script src="/js/catalog.js"></script>
-
-
-
-
+      <div class="post-item" title="">
+        <div class="time-m-d">03-11</div>
+        <div class="title">
+          <a href="/2021/03/11/%E5%9B%9E%E8%B0%83%E5%92%8C%E6%8A%BD%E8%B1%A1/">
+            <span></span>
+          </a>
+        </div>
+      </div>
     
-      <div class="comments-container">
-        
-
-
-
-
-
+      <div class="post-item" title="">
+        <div class="time-m-d">03-11</div>
+        <div class="title">
+          <a href="/2021/03/11/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/">
+            <span></span>
+          </a>
+        </div>
+      </div>
+    
+      <div class="post-item" title="Jedis线程回收问题">
+        <div class="time-m-d">01-10</div>
+        <div class="title">
+          <a href="/2021/01/10/Jedis%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/">
+            <span>Jedis线程回收问题</span>
+          </a>
+        </div>
+      </div>
+    
+        <!-- 后续文章的发布年份呈现 -->
+        <div class="content-title">
+          <h2>
+            <span>2020</span>
+          </h2>
+        </div>
+      
+      <div class="post-item" title="socket.io服务端理解和组件分析">
+        <div class="time-m-d">12-10</div>
+        <div class="title">
+          <a href="/2020/12/10/socket-io%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%90%86%E8%A7%A3%E5%92%8C%E7%BB%84%E4%BB%B6%E5%88%86%E6%9E%90/">
+            <span>socket.io服务端理解和组件分析</span>
+          </a>
+        </div>
+      </div>
+    
+      <div class="post-item" title="分布式事务">
+        <div class="time-m-d">11-20</div>
+        <div class="title">
+          <a href="/2020/11/20/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">
+            <span>分布式事务</span>
+          </a>
+        </div>
+      </div>
+    
+      <div class="post-item" title="Kafka消费者">
+        <div class="time-m-d">11-02</div>
+        <div class="title">
+          <a href="/2020/11/02/Kafka%E6%B6%88%E8%B4%B9%E8%80%85/">
+            <span>Kafka消费者</span>
+          </a>
+        </div>
+      </div>
+    
+      <div class="post-item" title="mysql下的join buffer">
+        <div class="time-m-d">07-10</div>
+        <div class="title">
+          <a href="/2020/07/10/mysql%E4%B8%8B%E7%9A%84join%20buffer/">
+            <span>mysql下的join buffer</span>
+          </a>
+        </div>
+      </div>
+    
+      <div class="post-item" title="mysql下的join buffer">
+        <div class="time-m-d">06-12</div>
+        <div class="title">
+          <a href="/2020/06/12/Volatile/">
+            <span>mysql下的join buffer</span>
+          </a>
+        </div>
       </div>
     
   </div>
-
+</div>
 
         <div class="footer">
   <div class="social">
