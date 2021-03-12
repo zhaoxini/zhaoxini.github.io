@@ -112,6 +112,127 @@ MathJax = {
   
 
   
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">分布式事务</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime" title="Update time"></i>
+          2020-11-20 00:00:00
+        </span>
+        
+      </div>
+      <div class="markdown-body">
+        <h2 id="XA"><a href="#XA" class="headerlink" title="XA"></a>XA</h2><p>XA 是 X/Open CAE Specification (Distributed Transaction Processing)模型，它定义的 TM（Transaction Manager）与 RM（Resource Manager）之间进行通信的接口。</p>
+<p><img src="http://static.iocoder.cn/c8f27f0e1107c328476600c4ed2608ec" alt="强 XA 的顺序图"></p>
+<ul>
+<li>二阶段提交是 XA 的标准实现。它将分布式事务的提交拆分为 2 个阶段：prepare 和 commit/rollback 。<ul>
+<li>第一阶段：事务管理器要求每个涉及到事务的数据库预提交(precommit)此操作，并反映是否可以提交。</li>
+<li>第二阶段：事务协调器要求每个数据库提交数据，或者回滚数据。</li>
+</ul>
+</li>
+<li>开启 XA 全局事务后，所有子事务会按照本地默认的隔离级别锁定资源，并记录 undo 和 redo 日志。然后由 TM 发起 prepare 投票，询问所有的子事务是否可以进行提交：<ul>
+<li>当所有子事务反馈的结果为 “yes” 时，TM 再发起 commit 。</li>
+<li>若其中任何一个子事务反馈的结果为“no”，TM 则发起 rollback 。</li>
+<li>如果在 prepare 阶段的反馈结果为 “yes” ，而 commit 的过程中出现宕机等异常时，则在节点服务重启后，可根据 XA recover 再次进行 commit 补偿，以保证数据的一致性。</li>
+</ul>
+</li>
+</ul>
+<h3 id="XA出现的问题"><a href="#XA出现的问题" class="headerlink" title="XA出现的问题"></a>XA出现的问题</h3><ul>
+<li><p>单点问题：事务管理器在整个流程中扮演的角色很关键，如果其宕机，比如在第一阶段已经完成，在第二阶段正准备提交的时候事务管理器宕机，资源管理器就会一直阻塞，导致数据库无法使用。</p>
+</li>
+<li><p>同步阻塞：在准备就绪之后，资源管理器中的资源一直处于阻塞，直到提交完成，释放资源。</p>
+</li>
+<li><p>数据不一致：两阶段提交协议虽然为分布式数据强一致性所设计，但仍然存在数据不一致性的可能，比如在第二阶段中，假设协调者发出了事务commit 的通知，但是因为网络问题该通知仅被一部分参与者所收到并执行了 commit 操作，其余的参与者则因为没有收到通知一直处于阻塞状态，这时候就产生了数据的不一致性。</p>
+</li>
+</ul>
+<p> <strong>解决方案</strong></p>
+<ul>
+<li><p>Sharding Sphere</p>
+<blockquote>
+<p>Sharding Sphere 支持基于 XA 的强一致性事务解决方案，可以通过 SPI 注入不同的第三方组件作为事务管理器实现 XA 协议，如 Atomikos 和 Narayana 。</p>
+</blockquote>
+</li>
+<li><p>Spring JTA + Atomikos</p>
+</li>
+</ul>
+<h3 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h3><p>这种分布式事务方案，比较适合单块应用里，跨多个库的分布式事务，而且因为严重依赖于数据库层面来搞定复杂的事务，效率很低，绝对不适合高并发的场景。</p>
+<p>这个方案，我们很少用，一般来说<strong>某个系统内部如果出现跨多个库</strong>的这么一个操作，是<strong>不合规</strong>的。我可以给大家介绍一下， 现在微服务，一个大的系统分成几百个服务，几十个服务。一般来说，我们的规定和规范，是要求<strong>每个服务只能操作自己对应的一个数据库</strong>。</p>
+<p>如果你要操作别的服务对应的库，不允许直连别的服务的库，违反微服务架构的规范，你随便交叉胡乱访问，几百个服务的话，全体乱套，这样的一套服务是没法管理的，没法治理的，可能会出现数据被别人改错，自己的库被别人写挂等情况。</p>
+<p>如果你要操作别人的服务的库，你必须是通过<strong>调用别的服务的接口</strong>来实现，绝对不允许交叉访问别人的数据库。</p>
+<p><a target="_blank" rel="noopener" href="http://static.iocoder.cn/baef17d9dde837632e9a7894cb825cb2"><img src="http://static.iocoder.cn/baef17d9dde837632e9a7894cb825cb2" alt="distributed-transacion-XA"></a>distributed-transacion-XA</p>
+<h2 id="利用消息可靠性保证最终一致性"><a href="#利用消息可靠性保证最终一致性" class="headerlink" title="利用消息可靠性保证最终一致性"></a>利用消息可靠性保证最终一致性</h2><p>这个的意思，就是干脆不要用本地的消息表了，直接基于 MQ 来实现事务。比如阿里的 RocketMQ 就支持消息事务。</p>
+<p>大概的意思就是：</p>
+<p><a target="_blank" rel="noopener" href="http://static.iocoder.cn/80a431c9be51ed67d9c67f7a1de7c2ed"><img src="http://static.iocoder.cn/80a431c9be51ed67d9c67f7a1de7c2ed" alt="distributed-transaction-reliable-message"></a></p>
+<ol>
+<li>A 系统先发送一个 prepared 消息到 mq，如果这个 prepared 消息发送失败那么就直接取消操作别执行了；</li>
+<li>如果这个消息发送成功过了，那么接着执行本地事务，如果成功就告诉 mq 发送确认消息，如果失败就告诉 mq 回滚消息；</li>
+<li>如果发送了确认消息，那么此时 B 系统会接收到确认消息，然后执行本地的事务；</li>
+<li>mq 会自动<strong>定时轮询</strong>所有 prepared 消息回调你的接口，问你，这个消息是不是本地事务处理失败了，所有没发送确认的消息，是继续重试还是回滚？一般来说这里你就可以查下数据库看之前本地事务是否执行，如果回滚了，那么这里也回滚吧。这个就是避免可能本地事务执行成功了，而确认消息却发送失败了。</li>
+<li>这个方案里，要是系统 B 的事务失败了咋办？重试咯，自动不断重试直到成功，如果实在是不行，要么就是针对重要的资金类业务进行回滚，比如 B 系统本地回滚后，想办法通知系统 A 也回滚；或者是发送报警由人工来手工回滚和补偿。</li>
+</ol>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><ol>
+<li>RocketMQ 事务消息</li>
+<li>RabbitMQ消息确认机制</li>
+<li>Kafka事务消息</li>
+</ol>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2020/11/02/Kafka%E6%B6%88%E8%B4%B9%E8%80%85/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime" title="Update time"></i>
+              2020-11-20 00:00:00
+            </span>
+            
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2020/12/10/socket-io%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%90%86%E8%A7%A3%E5%92%8C%E7%BB%84%E4%BB%B6%E5%88%86%E6%9E%90/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div class="post-catalog" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#XA"><span class="toc-text">XA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#XA%E5%87%BA%E7%8E%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-text">XA出现的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-text">应用场景</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%A9%E7%94%A8%E6%B6%88%E6%81%AF%E5%8F%AF%E9%9D%A0%E6%80%A7%E4%BF%9D%E8%AF%81%E6%9C%80%E7%BB%88%E4%B8%80%E8%87%B4%E6%80%A7"><span class="toc-text">利用消息可靠性保证最终一致性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-text">解决方案</span></a></li></ol></li></ol>
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+      </div>
+    
+  </div>
+
 
         <div class="footer">
   <div class="social">
