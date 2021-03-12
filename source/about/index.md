@@ -63,7 +63,7 @@
 
 #### 创业基础教育产品开发
 
-> Springboot + Mybatis-plus+Mysql+Redis+SpringCloud
+> Springboot + Mybatis-plus+Mysql+Redis+SpringCloud+ Netty
 
 1. 参与前期需求调研、需求分析
 2. 负责其中有云彩服务的数据库设计和相关编码工作
