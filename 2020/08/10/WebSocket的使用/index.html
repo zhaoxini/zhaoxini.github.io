@@ -112,6 +112,125 @@ MathJax = {
   
 
   
+  <!-- 文章内容页 url形式：https://yoursite/文章标题/ -->
+  <div class="container post-details" id="post-details">
+    <div class="post-content">
+      <div class="post-title">WebSocket服务端实现</div>
+      <div class="post-attach">
+        <span class="post-pubtime">
+          <i class="iconfont icon-updatetime" title="Update time"></i>
+          2020-08-10 00:00:00
+        </span>
+        
+              <span class="post-categories">
+                <i class="iconfont icon-bookmark" title="Categories"></i>
+                
+                <span class="span--category">
+                  <a href="/categories/WebSocket/" title="WebSocket">
+                    <b>#</b> WebSocket
+                  </a>
+                </span>
+                
+              </span>
+          
+      </div>
+      <div class="markdown-body">
+        <h1 id="WebSocket服务端实现"><a href="#WebSocket服务端实现" class="headerlink" title="WebSocket服务端实现"></a>WebSocket服务端实现</h1><h2 id="1-建立连接"><a href="#1-建立连接" class="headerlink" title="1. 建立连接"></a>1. 建立连接</h2><p>当客户端通过一系列的配置字段（主机（host）、端口（port）、资源名称（resource name）和安全标记（secure））以及一个可被使用的协议（protocol）和扩展（extensions）列表来建立一个WebSocket连接</p>
+<h2 id="2-关闭WebSocket连接"><a href="#2-关闭WebSocket连接" class="headerlink" title="2. 关闭WebSocket连接"></a>2. 关闭WebSocket连接</h2><h3 id="关闭原理"><a href="#关闭原理" class="headerlink" title="关闭原理"></a>关闭原理</h3><p>关闭tcp连接和tls会话。 tcp关闭才算<em><strong>彻底</strong></em></p>
+<p>用一个状态码 <code>code</code> （第 7.4 节）和一个可选的关闭原因 <code>reason</code> （第 7.1.6 节）来<code>开始 WebSocket 关闭握手</code>，</p>
+<p><code>WebSocket 关闭状态码</code>被默认为1005。</p>
+<h3 id="服务端如何关闭"><a href="#服务端如何关闭" class="headerlink" title="服务端如何关闭"></a>服务端如何关闭</h3><p><img src="https://cdn.nlark.com/yuque/0/2021/png/2597675/1613888491004-b3205912-ae69-4bb2-82c2-9410fdb212b5.png?x-oss-process=image/resize,w_1500" alt="image.png"></p>
+<p>如何管理所有的session </p>
+<p>通过map</p>
+<h2 id="3-WebSocket-代码实现"><a href="#3-WebSocket-代码实现" class="headerlink" title="3. WebSocket 代码实现"></a>3. WebSocket 代码实现</h2><h3 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">@EnableWebSocket</span><br><span class="line">public class WebSocketConfig&#123;</span><br><span class="line">    &#x2F;&#x2F; </span><br><span class="line">    @Bean</span><br><span class="line">    public ReverseWebSocketEndpoint reverseWebSocketEndpoint() &#123;</span><br><span class="line">        return new ReverseWebSocketEndpoint();</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    @Bean</span><br><span class="line">    public ServerEndpointExporter serverEndpointExporter() &#123;</span><br><span class="line">        return new ServerEndpointExporter();</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="客户端建立WebSocket连接测试"><a href="#客户端建立WebSocket连接测试" class="headerlink" title="客户端建立WebSocket连接测试"></a>客户端建立WebSocket连接测试</h2><p>前端建立WebSocket连接</p>
+<p>在浏览器控制台输入下面标红的语法即可</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2021/png/2597675/1613885589624-6db65e08-8609-4ab2-9353-661849c64ef1.png?x-oss-process=image/resize,w_1500" alt="image.png"></p>
+<p>⚠️：同源问题</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2021/png/2597675/1613885652515-f90275c9-0050-46ec-84c3-a977abfc7101.png?x-oss-process=image/resize,w_1500" alt="image.png"></p>
+<h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><p><strong>ServerEndpointExporter类代码分析</strong></p>
+<p><img src="https://cdn.nlark.com/yuque/0/2021/png/2597675/1613891579226-535abd17-59a1-467f-9828-dbfa87e0d87b.png?x-oss-process=image/resize,w_1500" alt="image.png"></p>
+<p>annotatedEndpointClasses是记录带有@<em>ServerEndpoint的类的一个集合</em></p>
+<p>这里涉及到<strong>InitializingBean</strong>接口、<strong>WebApplicationObjectSupport</strong>类的使用</p>
+<p><strong>WebApplicationObjectSupport类，</strong>继承此类可以获取ApplicationContext对象，调用getWebApplicationContext()获取WebApplicationContext</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">注：spring在代码中获取bean的几种办法</span><br><span class="line">方法一：在初始化时保存ApplicationContext对象 </span><br><span class="line">方法二：通过Spring提供的utils类获取ApplicationContext对象 </span><br><span class="line">方法三：继承自抽象类ApplicationObjectSupport </span><br><span class="line">方法四：继承自抽象类WebApplicationObjectSupport </span><br><span class="line">方法五：实现接口ApplicationContextAware </span><br><span class="line">方法六：通过Spring提供的ContextLoader</span><br></pre></td></tr></table></figure>
+
+<p>注：spring在代码中获取bean的几种办法</p>
+<p>方法一：在初始化时保存ApplicationContext对象 方法二：通过Spring提供的utils类获取ApplicationContext对象 方法三：继承自抽象类ApplicationObjectSupport 方法四：继承自抽象类WebApplicationObjectSupport 方法五：实现接口ApplicationContextAware 方法六：通过Spring提供的ContextLoader</p>
+<p><strong>InitializingBean</strong>接口为bean提供了初始化方法的方式，它只包括<strong>afterPropertiesSet方法</strong>，凡是继承该接口的类，在初始化bean的时候会执行该方法。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2021/png/2597675/1613895411231-35c1eeab-3b5d-458d-bbdf-0b629cc699c3.png?x-oss-process=image/resize,w_1500" alt="image.png"></p>
+<p>工具</p>
+<p><a target="_blank" rel="noopener" href="http://coolaf.com/tool/chattest">http://coolaf.com/tool/chattest</a> 在线websocket</p>
+<p>参考：</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/kiwifly/p/11729304.html">https://www.cnblogs.com/kiwifly/p/11729304.html</a>  session共享问题</p>
+
+      </div>
+      
+        <div class="prev-or-next">
+          <div class="post-foot-next">
+            
+              <a href="/2020/07/10/mysql%E4%B8%8B%E7%9A%84join%20buffer/" target="_self">
+                <i class="iconfont icon-chevronleft"></i>
+                <span>Prev</span>
+              </a>
+            
+          </div>
+          <div class="post-attach">
+            <span class="post-pubtime">
+              <i class="iconfont icon-updatetime" title="Update time"></i>
+              2020-08-10 00:00:00
+            </span>
+            
+                  <span class="post-categories">
+                    <i class="iconfont icon-bookmark" title="Categories"></i>
+                    
+                    <span class="span--category">
+                      <a href="/categories/WebSocket/" title="WebSocket">
+                        <b>#</b> WebSocket
+                      </a>
+                    </span>
+                    
+                  </span>
+              
+          </div>
+          <div class="post-foot-prev">
+            
+              <a href="/2020/11/02/Kafka%E6%B6%88%E8%B4%B9%E8%80%85/" target="_self">
+                <span>Next</span>
+                <i class="iconfont icon-chevronright"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+    </div>
+    
+  <div class="post-catalog" id="catalog">
+    <div class="title">Contents</div>
+    <div class="catalog-content">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#WebSocket%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%AE%9E%E7%8E%B0"><span class="toc-text">WebSocket服务端实现</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5"><span class="toc-text">1. 建立连接</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%85%B3%E9%97%ADWebSocket%E8%BF%9E%E6%8E%A5"><span class="toc-text">2. 关闭WebSocket连接</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%97%AD%E5%8E%9F%E7%90%86"><span class="toc-text">关闭原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%A6%82%E4%BD%95%E5%85%B3%E9%97%AD"><span class="toc-text">服务端如何关闭</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-WebSocket-%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="toc-text">3. WebSocket 代码实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-text">配置文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%BB%BA%E7%AB%8BWebSocket%E8%BF%9E%E6%8E%A5%E6%B5%8B%E8%AF%95"><span class="toc-text">客户端建立WebSocket连接测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-text">代码分析</span></a></li></ol></li></ol>
+    </div>
+  </div>
+
+  
+<script src="/js/catalog.js"></script>
+
+
+
+
+    
+      <div class="comments-container">
+        
+
+
+
+
+
+      </div>
+    
+  </div>
+
 
         <div class="footer">
   <div class="social">
